@@ -22,15 +22,27 @@ def read_data_file():
 	data_file = open(sys.argv[1])
 	data = pandas.read_csv(data_file, sep='\t')
 	target = data.target
+	classes = set()	
+	for c in target:
+		classes.add(c)
+
 	del data['target']
 	attributes = data
 	feature_cols = list(data.columns)
-	return attributes, target, feature_cols
+	return attributes, target, feature_cols, list(classes)
 
 criterion = check_arguments()
 
+
+print('\n\t*** Decision Tree Classifier ***')
+print('\n\tChosen criterion: ' + criterion)
+print('\tPath to data file: ' + sys.argv[1])
+print('\n\t********************')
+print('\n\tRunning DT-Classifier...')
+
+
 try:
-	attributes, target, feature_cols = read_data_file()
+	attributes, target, feature_cols, classes = read_data_file()
 	attributes_train, attributes_test, target_train, target_test = train_test_split(attributes, target,test_size=0.2, shuffle=False)
 
 	dtc = DecisionTreeClassifier(criterion=criterion, random_state=1)
@@ -38,13 +50,15 @@ try:
 
 	test_pred = dtc.predict(attributes_test)
 
-	print("Accuracy:",metrics.accuracy_score(target_test, test_pred))
+	print("\n\tAccuracy:",metrics.accuracy_score(target_test, test_pred))
 
 	tree.export_graphviz(dtc,
-                     out_file="tree.dot",
+                     out_file = "tree.dot",
                      feature_names = feature_cols, 
-                     class_names=['democrat', 'republican'],
+                     class_names = classes,
                      filled = True)
+
+	print("\n\tDecision Tree saved as tree.dot", end="\n\n")
 
 except:
 	print('\n\tAn except occurred. Check the inputs.')
