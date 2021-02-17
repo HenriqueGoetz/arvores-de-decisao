@@ -8,14 +8,34 @@ from graphviz import Source
 
 def check_arguments():
 
-    if(len(sys.argv) < 2 or len(sys.argv) > 3):
-        print('\n\tCall python3 dt-classifier.py data_file criterion(optional, default="gini")\n')
+    if(len(sys.argv) < 2 or len(sys.argv) > 4):
+        print('\n\tCall python3 dt-classifier.py data_file criterion(optional, default="gini") max_depth(optional, default="None") \n')
         exit()
 
-    if(len(sys.argv) == 3):
-    	return sys.argv[2]
-    else:
-    	return 'gini'
+    criterion = 'gini'
+    max_depth = None
+
+    if(len(sys.argv) >= 3):
+    	
+    	val = sys.argv[2]
+    	if(val == 'entropy' or val == 'gini'):
+    		criterion = val
+    		if(len(sys.argv) == 4):
+
+    			if(sys.argv[3].isnumeric()):
+	    			max_depth = int(sys.argv[3])
+	    		else:
+	    			print('\n\tInvalid value to max_depth, it should be a int number.\n')
+	    			exit()
+    	else:
+    		if(val.isnumeric()):
+    			max_depth = int(val)
+    		else:
+    			print('\n\tInvalid value to max_depth, it should be a int number.\n')
+    			exit()
+
+    return criterion, max_depth
+
 
 def read_data_file():
 
@@ -31,21 +51,20 @@ def read_data_file():
 	feature_cols = list(data.columns)
 	return attributes, target, feature_cols, list(classes)
 
-criterion = check_arguments()
-
+criterion, max_depth = check_arguments()
 
 print('\n\t*** Decision Tree Classifier ***')
 print('\n\tChosen criterion: ' + criterion)
+print('\tChosen max_depth: ' + (str(max_depth) if max_depth else 'None'))
 print('\tPath to data file: ' + sys.argv[1])
-print('\n\t********************')
+print('\n\t********************************')
 print('\n\tRunning DT-Classifier...')
-
 
 try:
 	attributes, target, feature_cols, classes = read_data_file()
 	attributes_train, attributes_test, target_train, target_test = train_test_split(attributes, target,test_size=0.2, shuffle=False)
 
-	dtc = DecisionTreeClassifier(criterion=criterion, random_state=1)
+	dtc = DecisionTreeClassifier(criterion=criterion, random_state=1, max_depth=max_depth)
 	dtc = dtc.fit(attributes_train, target_train)
 
 	test_pred = dtc.predict(attributes_test)
