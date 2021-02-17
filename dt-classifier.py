@@ -8,33 +8,20 @@ from graphviz import Source
 
 def check_arguments():
 
-    if(len(sys.argv) < 2 or len(sys.argv) > 4):
-        print('\n\tCall python3 dt-classifier.py data_file criterion(optional, default="gini") max_depth(optional, default="None") \n')
+    if(len(sys.argv) != 2 and len(sys.argv) != 5):
+        print('\n\tCall python3 dt-classifier.py data_file { criterion max_depth ccp_alpha (optional, default="gini None 0.0") } \n')
         exit()
 
     criterion = 'gini'
     max_depth = None
+    ccp_alpha = 0.0
 
-    if(len(sys.argv) >= 3):
-    	
-    	val = sys.argv[2]
-    	if(val == 'entropy' or val == 'gini'):
-    		criterion = val
-    		if(len(sys.argv) == 4):
+    if(len(sys.argv) == 5):
+    	criterion = sys.argv[2]
+    	max_depth = int(sys.argv[3]) if sys.argv[3].isnumeric() else None
+    	ccp_alpha = float(sys.argv[4])
 
-    			if(sys.argv[3].isnumeric()):
-	    			max_depth = int(sys.argv[3])
-	    		else:
-	    			print('\n\tInvalid value to max_depth, it should be a int number.\n')
-	    			exit()
-    	else:
-    		if(val.isnumeric()):
-    			max_depth = int(val)
-    		else:
-    			print('\n\tInvalid value to max_depth, it should be a int number.\n')
-    			exit()
-
-    return criterion, max_depth
+    return criterion, max_depth, ccp_alpha
 
 
 def read_data_file():
@@ -51,20 +38,22 @@ def read_data_file():
 	feature_cols = list(data.columns)
 	return attributes, target, feature_cols, list(classes)
 
-criterion, max_depth = check_arguments()
+
+criterion, max_depth, ccp_alpha = check_arguments()
 
 print('\n\t*** Decision Tree Classifier ***')
 print('\n\tChosen criterion: ' + criterion)
 print('\tChosen max_depth: ' + (str(max_depth) if max_depth else 'None'))
+print('\tChosen ccp_alpha: ' + (str(ccp_alpha)))
 print('\tPath to data file: ' + sys.argv[1])
 print('\n\t********************************')
 print('\n\tRunning DT-Classifier...')
 
 try:
 	attributes, target, feature_cols, classes = read_data_file()
-	attributes_train, attributes_test, target_train, target_test = train_test_split(attributes, target,test_size=0.2, shuffle=False)
+	attributes_train, attributes_test, target_train, target_test = train_test_split(attributes, target, test_size=0.2, shuffle=False)
 
-	dtc = DecisionTreeClassifier(criterion=criterion, random_state=1, max_depth=max_depth)
+	dtc = DecisionTreeClassifier(criterion=criterion, random_state=1, max_depth=max_depth, ccp_alpha=ccp_alpha)
 	dtc = dtc.fit(attributes_train, target_train)
 
 	test_pred = dtc.predict(attributes_test)
